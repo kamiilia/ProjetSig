@@ -1,0 +1,41 @@
+version: "3"
+
+services:
+  db-postgis:
+    container_name: db-postgis
+    image: kartoza/postgis:latest
+    environment:
+      - POSTGRES_DB=sigdb
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+    volumes:
+      - ./postgres_data:/var/lib/postgresql
+  geoserver:
+    container_name: geoserver
+    image: kartoza/geoserver:latest
+    depends_on:
+      - db-postgis
+    links:
+      - db-postgis
+    environment:
+      - USERNAME=root
+      - PASS=root
+      - GEOSERVER_ADMIN_PASSWORD=password
+    ports:
+      - 8080:8080
+    volumes:
+      - ./geoserver_data:/opt/geoserver/data_dir
+  sig-api:
+    container_name: sig-api
+    build:
+      context: ../sig-api
+      dockerfile: sig.Dockerfile
+    depends_on:
+      - db-postgis
+    environment:
+      - HOST=db-postgis
+      - DB=sigdb
+      - USER_DB=root
+      - PWD_DB=root
+    ports:
+      - 8081:8080

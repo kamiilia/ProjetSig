@@ -1,0 +1,103 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+            <link rel="stylesheet" href="v6.1.1-dist/ol.css" type="text/css">
+            <script src="v6.1.1-dist/ol.js"></script>
+        <title>Carte</title>
+    </head>
+    <body>
+                <div id="map" class="map"></div>
+        <script type="text/javascript">
+var view = new ol.View({
+    center: ol.proj.fromLonLat([1.900361, 47.831579]),
+    zoom: 10
+});
+
+var geolocation = new ol.Geolocation({
+  trackingOptions: {
+    enableHighAccuracy: true
+  },
+  projection: view.getProjection()
+});
+geolocation.setTracking(true);
+
+var accuracyFeature = new ol.Feature();
+geolocation.on('change:accuracyGeometry', function() {
+  accuracyFeature.setGeometry(geolocation.getAccuracyGeometry());
+});
+
+var positionFeature = new ol.Feature();
+positionFeature.setStyle(new ol.style.Style({
+  image: new ol.style.Circle({
+    radius: 6,
+    fill: new ol.style.Fill({
+      color: '#3399CC'
+    }),
+    stroke: new ol.style.Stroke({
+      color: '#fff',
+      width: 2
+    })
+  })
+}));
+
+geolocation.on('change:position', function() {
+  var coordinates = geolocation.getPosition();
+  positionFeature.setGeometry(coordinates ?
+    new ol.geom.Point(coordinates) : null);
+});
+
+var osm = new ol.layer.Tile({
+      source: new ol.source.OSM()
+    });
+
+var arretsTramA = new ol.layer.Tile({
+  //extent: ol.proj.transformExtent([1.900361,47.831579,1.937069,47.92927],'EPSG:4326','EPSG:3857'),
+    source: new ol.source.TileWMS({
+    url: 'http://localhost:8080/geoserver/sigdb/wms',
+    params: {'layers': 'sigdb:arrets_tram_A'},
+    serverType: 'geoserver'
+  }),
+
+});
+
+var arretsTramB = new ol.layer.Tile({
+  //extent: ol.proj.transformExtent([1.854195,47.896812,1.976329,47.911011],'EPSG:4326','EPSG:3857'),
+  source: new ol.source.TileWMS({
+    url: 'http://localhost:8080/geoserver/sigdb/wms',
+    params: {'layers': 'sigdb:arrets_tram_B'},
+    serverType: 'geoserver'
+  })
+});
+
+var arretsTao = new ol.layer.Tile({
+  source: new ol.source.TileWMS({
+    url: 'http://localhost:8080/geoserver/sigdb/wms',
+    params: {'layers': 'sigdb:arret_tao'},
+    serverType: 'geoserver'
+  })
+});
+
+var arretsBus = new ol.layer.Tile({
+  source: new ol.source.TileWMS({
+    url: 'http://localhost:8080/geoserver/sigdb/wms',
+    params: {'layers': 'sigdb:arrets_Bus'},
+    serverType: 'geoserver'
+  })
+});
+
+var map = new ol.Map({
+  layers: [osm, arretsTramA,arretsTramB],
+  target: 'map',
+  view: view
+});
+
+new ol.layer.Vector({
+  map: map,
+  source: new ol.source.Vector({
+    features: [accuracyFeature, positionFeature]
+  })
+});
+
+</script>
+    </body>
+</html>
